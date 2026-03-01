@@ -9,6 +9,15 @@ backend/target/
 *.war
 *.class
 
+# ----- Stale root-level duplicates (source of truth is backend/) -----
+/src/
+/pom.xml
+/Dockerfile
+/.dockerignore
+
+# ----- CI upgrade logs -----
+.github/java-upgrade/
+
 # ----- Maven -----
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
