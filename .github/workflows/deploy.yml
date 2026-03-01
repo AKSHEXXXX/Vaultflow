@@ -60,8 +60,6 @@ jobs:
           AWS_REGION: us-east-1
           AWS_S3_BUCKET: saas-test-bucket
           JWT_SECRET: dGVzdC1qd3Qtc2VjcmV0LW11c3QtYmUtbG9uZy1lbm91Z2gtZm9yLUhTMjU2LWFsZ29yaXRobQ==
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         run: mvn test -B --no-transfer-progress
 
       - name: Upload test reports
