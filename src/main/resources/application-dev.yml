@@ -36,7 +36,7 @@ aws:
   s3:
     access-key: ${AWS_ACCESS_KEY_ID:test}
     secret-key: ${AWS_SECRET_ACCESS_KEY:test}
-    region: ${AWS_REGION:us-east-1}
+    region: ${AWS_REGION:ap-south-1}
     bucket-name: ${AWS_S3_BUCKET:saas-documents-dev}
     presigned-url-expiration: 3600
     endpoint: ${AWS_S3_ENDPOINT:http://localhost:4566}

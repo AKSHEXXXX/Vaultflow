@@ -57,7 +57,7 @@ jobs:
           SPRING_DATA_REDIS_PORT: '6379'
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
-          AWS_REGION: us-east-1
+          AWS_REGION: ap-south-1
           AWS_S3_BUCKET: saas-test-bucket
           JWT_SECRET: dGVzdC1qd3Qtc2VjcmV0LW11c3QtYmUtbG9uZy1lbm91Z2gtZm9yLUhTMjU2LWFsZ29yaXRobQ==
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
