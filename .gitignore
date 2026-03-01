@@ -1,0 +1,47 @@
+# =============================================================================
+# .gitignore — SaaS Platform
+# =============================================================================
+
+# ----- Build outputs -----
+target/
+*.jar
+*.war
+*.class
+
+# ----- Maven -----
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ----- IDE -----
+.idea/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+.vscode/
+*.swp
+*.swo
+
+# ----- Environment & Secrets (NEVER commit these) -----
+.env
+.env.prod
+.env.local
+.env.*.local
+
+# ----- SSL Certificates -----
+nginx/certs/
+
+# ----- Logs -----
+*.log
+logs/
+
+# ----- OS -----
+.DS_Store
+Thumbs.db
+
+# ----- Docker -----
+# Keep docker-compose files and Dockerfile — exclude only compose override
+docker-compose.override.yml
