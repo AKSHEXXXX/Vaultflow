@@ -80,7 +80,6 @@ services:
     image: nginx:1.25-alpine
     container_name: saas-nginx-prod
     restart: always
-    profiles: ["proxy"]    # Only starts when: docker compose --profile proxy up
     ports:
       - "80:80"
       - "443:443"
