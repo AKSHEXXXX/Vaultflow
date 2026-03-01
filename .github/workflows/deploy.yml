@@ -125,6 +125,8 @@ jobs:
       - name: Deploy
         env:
           DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/saas-backend
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           IMAGE_TAG: ${{ github.sha }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}

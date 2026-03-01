@@ -20,6 +20,8 @@ IMAGE_TAG="${IMAGE_TAG:-latest}"
 EC2_HOST="${EC2_HOST:?EC2_HOST must be set}"
 EC2_USER="${EC2_USER:-ubuntu}"
 SSH_KEY="${SSH_KEY:?SSH_KEY must be set}"
+DOCKER_USERNAME="${DOCKER_USERNAME:?DOCKER_USERNAME must be set}"
+DOCKER_PASSWORD="${DOCKER_PASSWORD:?DOCKER_PASSWORD must be set}"
 APP_DIR="${APP_DIR:-~/app}"
 COMPOSE_FILE="docker-compose.prod.yml"
 
@@ -41,7 +43,7 @@ set -euo pipefail
 cd ${APP_DIR}
 
 echo "--- Logging in to Docker Hub ---"
-echo "\${DOCKER_PASSWORD}" | docker login -u "\${DOCKER_USERNAME}" --password-stdin
+echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
 echo "--- Pulling new image: ${DOCKER_IMAGE}:${IMAGE_TAG} ---"
 DOCKER_IMAGE=${DOCKER_IMAGE} IMAGE_TAG=${IMAGE_TAG} \
