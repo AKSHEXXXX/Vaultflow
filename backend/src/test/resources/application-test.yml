@@ -1,0 +1,49 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/saas_test}
+    username: ${SPRING_DATASOURCE_USERNAME:saas_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:saas_password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    show-sql: false
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            # Fixed non-empty test values — CI does not need real OAuth credentials
+            client-id: test-google-client-id
+            client-secret: test-google-client-secret
+            scope: openid,profile,email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+jwt:
+  secret: ${JWT_SECRET:dGVzdC1qd3Qtc2VjcmV0LW11c3QtYmUtbG9uZy1lbm91Z2gtZm9yLUhTMjU2LWFsZ29yaXRobQ==}
+  access-token-expiration: 900000
+  refresh-token-expiration: 604800000
+
+app:
+  oauth2:
+    redirect-uri: http://localhost:5173/oauth/callback
+
+aws:
+  s3:
+    access-key: ${AWS_ACCESS_KEY_ID:test}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:test}
+    region: ${AWS_REGION:ap-south-1}
+    bucket-name: saas-documents-test
+    presigned-url-expiration: 3600
+    # Empty endpoint = use real AWS SDK (no LocalStack needed in CI)
+    endpoint: ""

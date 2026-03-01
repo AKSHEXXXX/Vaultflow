@@ -51,6 +51,7 @@ jobs:
       - name: Run tests
         working-directory: backend
         env:
+          SPRING_PROFILES_ACTIVE: test
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/saas_test
           SPRING_DATASOURCE_USERNAME: saas_user
           SPRING_DATASOURCE_PASSWORD: saas_password
@@ -59,10 +60,7 @@ jobs:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_REGION: ap-south-1
-          AWS_S3_BUCKET: saas-test-bucket
           JWT_SECRET: dGVzdC1qd3Qtc2VjcmV0LW11c3QtYmUtbG9uZy1lbm91Z2gtZm9yLUhTMjU2LWFsZ29yaXRobQ==
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         run: mvn test -B --no-transfer-progress
 
       - name: Upload test reports
