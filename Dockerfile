@@ -39,7 +39,7 @@ USER appuser
 EXPOSE 8080
 
 # Health check — calls the Spring Actuator health endpoint
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # SPRING_PROFILES_ACTIVE is injected via docker-compose env_file / -e flag.
