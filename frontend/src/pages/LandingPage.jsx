@@ -1,197 +1,283 @@
+import { useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
-import {
-  ArrowRight, Shield, FileText, Users, Zap,
-  CheckCircle, Clock, XCircle
-} from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 
 export default function LandingPage() {
   const { user, loading } = useAuth()
   if (loading) return null
   if (user) return <Navigate to="/dashboard" replace />
-
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white font-sans">
       <Navbar />
       <Hero />
-      <Features />
-      <HowItWorks />
-      <CTA />
+      <TrustBar />
+      <FeatureWorkflows />
+      <FeatureCompliance />
+      <FAQ />
+      <DarkCTA />
       <Footer />
     </div>
   )
 }
 
-// ─── Navbar ──────────────────────────────────────────────────────────────────
+function Logo({ dark = false }) {
+  return (
+    <Link to="/" className="flex items-center gap-2">
+      <div className={`w-7 h-7 ${dark ? 'bg-white' : 'bg-black'} rounded-lg flex items-center justify-center flex-shrink-0`}>
+        <span className={`${dark ? 'text-black' : 'text-white'} font-black text-base leading-none`}>✳</span>
+      </div>
+      <span className={`font-bold text-lg tracking-tight ${dark ? 'text-white' : 'text-gray-900'}`}>VaultFlow</span>
+    </Link>
+  )
+}
+
 function Navbar() {
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-      <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-16">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">V</span>
-          </div>
-          <span className="font-bold text-gray-900 text-lg">VaultFlow</span>
-        </div>
-        <nav className="flex items-center gap-6">
-          <a href="#features" className="text-sm text-gray-500 hover:text-gray-900 transition-colors hidden sm:block">
-            Features
-          </a>
-          <a href="#how" className="text-sm text-gray-500 hover:text-gray-900 transition-colors hidden sm:block">
-            How it works
-          </a>
-          <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 font-medium">
-            Sign in
-          </Link>
-          <Link
-            to="/register"
-            className="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-          >
-            Get started
-          </Link>
+    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+      <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
+        <Logo />
+        <nav className="hidden md:flex items-center gap-7">
+          {[['Features', '#features'], ['Customers', '#'], ['Pricing', '#pricing']].map(([label, href]) => (
+            <a key={label} href={href} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">{label}</a>
+          ))}
         </nav>
+        <div className="flex items-center gap-2">
+          <Link to="/login" className="text-sm text-gray-600 hover:text-gray-900 font-medium px-3 py-1.5 transition-colors">Sign in</Link>
+          <Link to="/register" className="bg-black hover:bg-gray-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">Get Started</Link>
+        </div>
       </div>
     </header>
   )
 }
 
-// ─── Hero ─────────────────────────────────────────────────────────────────────
 function Hero() {
+  const [email, setEmail] = useState('')
   return (
-    <section className="pt-24 pb-20 px-6 overflow-hidden">
-      <div className="max-w-4xl mx-auto text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <span className="inline-flex items-center gap-1.5 bg-brand-50 text-brand-700 text-sm font-medium px-4 py-1.5 rounded-full mb-8 border border-brand-100">
-            <Zap size={13} /> Multi-tenant · Role-based · Audited
-          </span>
+    <section className="pt-20 pb-0 px-6 overflow-hidden">
+      <div className="max-w-3xl mx-auto text-center">
+        <motion.a href="#features" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+          className="inline-flex items-center gap-1.5 border border-gray-200 text-gray-500 text-sm px-4 py-1.5 rounded-full mb-8 hover:bg-gray-50 transition-colors">
+          Now with AI-powered document review <ArrowRight size={12} />
+        </motion.a>
+        <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.05 }}
+          className="text-5xl sm:text-6xl font-black text-gray-900 leading-[1.08] tracking-tight mb-5">
+          Secure document workflows<br />for ambitious teams
+        </motion.h1>
+        <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
+          className="text-lg text-gray-500 max-w-xl mx-auto mb-7 leading-relaxed">
+          Built for fast-growing companies. Smart workflows handle approvals, compliance, and
+          audit trails so your team doesn't have to.
+        </motion.p>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.15 }}
+          className="flex items-center justify-center gap-2 mb-8">
+          <span className="text-yellow-400">★</span>
+          <span className="text-sm font-semibold text-gray-700">5/5</span>
+          <span className="text-sm text-gray-400">Hear from our customers</span>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}
+          className="flex items-center justify-center gap-2 max-w-md mx-auto">
+          <input type="email" placeholder="What's your work email?" value={email} onChange={e => setEmail(e.target.value)}
+            className="flex-1 border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-gray-400 transition-colors bg-white" />
+          <Link to={email ? `/register?email=${encodeURIComponent(email)}` : '/register'}
+            className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white text-sm font-medium px-5 py-3 rounded-lg transition-colors whitespace-nowrap">
+            → Get Started
+          </Link>
+        </motion.div>
+      </div>
 
-          <h1 className="text-5xl sm:text-6xl font-black text-gray-900 leading-[1.1] tracking-tight mb-6">
-            Document workflows,
-            <br />
-            <span className="text-brand-600">done right.</span>
-          </h1>
-
-          <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-            VaultFlow gives your team a secure, role-based platform to upload, review, and
-            approve documents — with a full audit trail on every decision.
-          </p>
-
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            <Link
-              to="/register"
-              className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold px-7 py-3.5 rounded-xl transition-colors text-sm shadow-lg shadow-brand-200"
-            >
-              Start free <ArrowRight size={16} />
-            </Link>
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 bg-white text-gray-700 hover:text-gray-900 font-medium px-7 py-3.5 rounded-xl border border-gray-200 hover:border-gray-300 transition-colors text-sm"
-            >
-              Sign in
-            </Link>
+      <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }}
+        className="max-w-5xl mx-auto mt-14">
+        <div className="bg-[#1c1c1e] rounded-t-2xl p-3 shadow-2xl">
+          <div className="flex items-center gap-1.5 mb-3 px-1">
+            <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
+            <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
+            <div className="w-3 h-3 rounded-full bg-[#28ca41]" />
           </div>
+          <DashboardMockup />
+        </div>
+      </motion.div>
+    </section>
+  )
+}
 
-          <p className="mt-5 text-xs text-gray-400">No credit card required · Setup in 60 seconds</p>
+function DashboardMockup() {
+  return (
+    <div className="bg-white rounded-lg overflow-hidden flex" style={{ height: 340 }}>
+      <div className="w-44 bg-gray-50 border-r border-gray-100 p-3 flex-shrink-0">
+        <div className="flex items-center gap-1.5 mb-4 px-1">
+          <div className="w-4 h-4 bg-black rounded flex items-center justify-center flex-shrink-0">
+            <span className="text-white text-[8px] font-black">✳</span>
+          </div>
+          <span className="text-xs font-semibold text-gray-700 truncate">Acme Corp</span>
+        </div>
+        {[['Home', false], ['Documents', true], ['Pending Review', false], ['Team', false], ['Settings', false]].map(([label, active]) => (
+          <div key={label} className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs mb-0.5 ${active ? 'bg-black text-white' : 'text-gray-500'}`}>
+            <div className={`w-1 h-1 rounded-full ${active ? 'bg-white' : 'bg-gray-300'}`} />
+            {label}
+          </div>
+        ))}
+      </div>
+      <div className="flex-1 p-4 overflow-hidden">
+        <p className="text-sm font-semibold text-gray-800 mb-3">Good morning, Sarah</p>
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {[['Total Docs', '142', 'bg-gray-50'], ['Pending', '8', 'bg-amber-50'], ['Approved', '126', 'bg-green-50']].map(([label, val, bg]) => (
+            <div key={label} className={`${bg} rounded-lg p-2.5`}>
+              <p className="text-[10px] text-gray-400">{label}</p>
+              <p className="text-base font-bold text-gray-800">{val}</p>
+            </div>
+          ))}
+        </div>
+        <div className="space-y-1.5">
+          {[
+            ['Q4 Financial Report.pdf', 'Approved', 'text-green-600 bg-green-50'],
+            ['Employment Contract — J. Miller', 'Pending', 'text-amber-600 bg-amber-50'],
+            ['NDA Template v3.docx', 'Approved', 'text-green-600 bg-green-50'],
+            ['Vendor Agreement 2026', 'Draft', 'text-gray-500 bg-gray-100'],
+          ].map(([name, status, cls]) => (
+            <div key={name} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+              <span className="text-[11px] text-gray-700 truncate flex-1 mr-2">{name}</span>
+              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${cls} flex-shrink-0`}>{status}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="w-36 border-l border-gray-100 p-3 flex-shrink-0">
+        <div className="bg-green-50 rounded-lg p-2.5 mb-3">
+          <div className="flex items-center gap-1.5 mb-1">
+            <div className="w-3 h-3 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-[7px] font-bold">✓</span>
+            </div>
+            <span className="text-[10px] font-semibold text-green-700">All Compliant</span>
+          </div>
+          <p className="text-[9px] text-green-600">Audit trail up to date</p>
+        </div>
+        <p className="text-[10px] text-gray-400 mb-1.5">Recent activity</p>
+        {['Doc approved', 'User invited', 'Doc uploaded', 'Doc rejected'].map(a => (
+          <div key={a} className="text-[10px] text-gray-600 py-1.5 border-b border-gray-50 last:border-0">{a}</div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TrustBar() {
+  return (
+    <div className="py-12 px-6 border-y border-gray-100 mt-12">
+      <p className="text-center text-sm text-gray-400 mb-7">Trusted by finance and ops teams at fast-growing companies</p>
+      <div className="max-w-3xl mx-auto flex flex-wrap items-center justify-center gap-8">
+        {['Stripe', 'Notion', 'Linear', 'Vercel', 'Loom', 'Figma', 'Rippling'].map(l => (
+          <span key={l} className="text-gray-300 font-bold text-sm tracking-widest uppercase">{l}</span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FeatureWorkflows() {
+  return (
+    <section id="features" className="py-24 px-6 bg-gray-50">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+          <span className="text-brand-600 text-sm font-semibold">Workflows</span>
+          <h2 className="text-4xl font-black text-gray-900 mt-2 mb-4 leading-tight">Approve documents<br />without lifting a finger</h2>
+          <p className="text-gray-500 text-base leading-relaxed">
+            Submit once, track always. VaultFlow automatically routes documents through your
+            approval chain — from DRAFT to APPROVED in minutes. Every action is logged with a timestamp and actor.
+          </p>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
+          className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="space-y-1">
+            {[
+              ['📄', 'Employee uploads document', 'Draft', 'bg-blue-50 text-blue-600'],
+              ['🔄', 'Submitted for manager review', 'Pending', 'bg-amber-50 text-amber-600'],
+              ['✅', 'Manager approves', 'Approved', 'bg-green-50 text-green-600'],
+            ].map(([icon, label, status, cls], i, arr) => (
+              <div key={label}>
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl ${cls} flex items-center justify-center text-lg flex-shrink-0`}>{icon}</div>
+                  <p className="text-sm font-medium text-gray-800 flex-1">{label}</p>
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${cls}`}>{status}</span>
+                </div>
+                {i < arr.length - 1 && <div className="ml-5 my-1 w-0.5 h-4 bg-gray-100 rounded-full" />}
+              </div>
+            ))}
+          </div>
         </motion.div>
       </div>
     </section>
   )
 }
 
-// ─── Features ─────────────────────────────────────────────────────────────────
-const FEATURES = [
-  {
-    icon: Shield,
-    title: 'Role-based access',
-    description: 'ADMIN, MANAGER, and EMPLOYEE roles enforced at every step. Employees upload, managers approve — no exceptions.',
-    color: 'bg-brand-50 text-brand-600',
-  },
-  {
-    icon: FileText,
-    title: 'Full document lifecycle',
-    description: 'Track every document from DRAFT → PENDING → APPROVED or REJECTED with timestamps and actor info.',
-    color: 'bg-purple-50 text-purple-600',
-  },
-  {
-    icon: Users,
-    title: 'Multi-tenant isolation',
-    description: 'Each company gets a completely isolated workspace. Invite your entire team with one click from the admin panel.',
-    color: 'bg-green-50 text-green-600',
-  },
-]
-
-function Features() {
+function FeatureCompliance() {
   return (
-    <section id="features" className="py-20 px-6 bg-gray-50">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-14">
-          <h2 className="text-3xl font-black text-gray-900 mb-4">Everything your team needs</h2>
-          <p className="text-gray-500 text-lg max-w-xl mx-auto">
-            Built for companies that take document management seriously.
+    <section className="py-24 px-6 bg-white">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
+          className="bg-gray-50 rounded-2xl border border-gray-100 p-6 order-2 lg:order-1">
+          {[
+            ['🔒', 'Role-based access control', 'ADMIN · MANAGER · EMPLOYEE'],
+            ['📋', 'Full immutable audit trail', 'Every action timestamped & logged'],
+            ['🏢', 'Multi-tenant isolation', 'Separate workspace per company'],
+            ['☁️', 'S3 secure file storage', 'Cloud document storage built-in'],
+          ].map(([icon, label, desc]) => (
+            <div key={label} className="flex items-start gap-3 bg-white rounded-xl p-4 border border-gray-100 shadow-sm mb-3 last:mb-0">
+              <span className="text-xl flex-shrink-0">{icon}</span>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-800">{label}</p>
+                <p className="text-xs text-gray-400">{desc}</p>
+              </div>
+              <div className="w-5 h-5 bg-brand-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-brand-600 text-[10px] font-bold">✓</span>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+        <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
+          className="order-1 lg:order-2">
+          <span className="text-brand-600 text-sm font-semibold">Compliance</span>
+          <h2 className="text-4xl font-black text-gray-900 mt-2 mb-4 leading-tight">Stay compliant<br />across every team</h2>
+          <p className="text-gray-500 text-base leading-relaxed">
+            Enterprise-grade security with role-based access controls. Every document change,
+            approval, and rejection is immutably logged — giving you a complete audit trail
+            for any compliance review, any time.
           </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {FEATURES.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.4 }}
-              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className={`w-12 h-12 rounded-xl ${f.color} flex items-center justify-center mb-4`}>
-                <f.icon size={22} />
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2 text-base">{f.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{f.description}</p>
-            </motion.div>
-          ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )
 }
 
-// ─── How it works ─────────────────────────────────────────────────────────────
-const STEPS = [
-  { n: '01', icon: FileText,    color: 'bg-brand-50 text-brand-500',   title: 'Upload & save as Draft',      desc: 'Any team member uploads a file. It sits safely as a DRAFT.' },
-  { n: '02', icon: Clock,       color: 'bg-amber-50 text-amber-500',   title: 'Submit for review',            desc: 'Employee submits it — status flips to PENDING, manager is notified.' },
-  { n: '03', icon: CheckCircle, color: 'bg-green-50 text-green-500',   title: 'Manager decides',              desc: 'Manager approves or rejects with one click. Status finalised.' },
+const FAQ_ITEMS = [
+  { q: 'How is VaultFlow different from other platforms?', a: 'VaultFlow is purpose-built for multi-tenant document workflows with role-based access control, full audit trails, and an approval engine — not a generic file storage solution.' },
+  { q: 'Who is VaultFlow built for?', a: 'Fast-growing companies from 10 to 500+ employees who need structured document approval workflows with compliance and audit requirements.' },
+  { q: 'How long does it take to get started?', a: 'Setup takes under 10 minutes. Create your workspace, invite your team, and start routing documents for approval immediately.' },
+  { q: 'Does VaultFlow handle role-based access control?', a: 'Yes. VaultFlow enforces ADMIN, MANAGER, and EMPLOYEE roles at every level — from who can upload to who can approve or reject.' },
+  { q: 'Can VaultFlow integrate with our existing tools?', a: 'VaultFlow offers a REST API and webhook support, making it easy to connect with Slack, Notion, and other tools your team already uses.' },
+  { q: 'What kind of support does VaultFlow offer?', a: 'We offer email support for all plans and dedicated onboarding assistance for larger teams.' },
+  { q: 'What does VaultFlow cost?', a: 'VaultFlow offers a free tier for small teams. Contact us for pricing on larger plans with advanced compliance features.' },
 ]
 
-function HowItWorks() {
+function FAQ() {
+  const [open, setOpen] = useState(null)
   return (
-    <section id="how" className="py-20 px-6">
-      <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-14">
-          <h2 className="text-3xl font-black text-gray-900 mb-4">How it works</h2>
-          <p className="text-gray-500 text-lg">Three steps to a fully audited document decision.</p>
+    <section id="faq" className="py-24 px-6 border-t border-gray-100">
+      <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div>
+          <h2 className="text-4xl font-black text-gray-900">Questions?</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
-          {/* connector line */}
-          <div className="hidden md:block absolute top-10 left-[calc(33%+1.5rem)] right-[calc(33%+1.5rem)] h-0.5 bg-gradient-to-r from-brand-200 to-brand-200 z-0" />
-          {STEPS.map((s, i) => (
-            <motion.div
-              key={s.n}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.15, duration: 0.4 }}
-              className="relative z-10 flex flex-col items-center text-center bg-white rounded-2xl border border-gray-100 shadow-sm p-6"
-            >
-              <div className={`w-12 h-12 rounded-full ${s.color} flex items-center justify-center mb-4 ring-4 ring-white`}>
-                <s.icon size={22} />
+        <div className="lg:col-span-2 divide-y divide-gray-100">
+          {FAQ_ITEMS.map((item, i) => (
+            <div key={i} className={`py-4 cursor-pointer transition-all rounded-lg ${open === i ? 'bg-gray-50 px-4 -mx-4' : ''}`}
+              onClick={() => setOpen(open === i ? null : i)}>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-sm font-medium text-gray-800">{item.q}</span>
+                <span className="text-gray-400 text-lg flex-shrink-0">{open === i ? '−' : '+'}</span>
               </div>
-              <span className="text-4xl font-black text-gray-100 mb-2">{s.n}</span>
-              <h3 className="font-semibold text-gray-900 mb-2 -mt-2">{s.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{s.desc}</p>
-            </motion.div>
+              {open === i && <p className="text-sm text-gray-500 mt-2 leading-relaxed">{item.a}</p>}
+            </div>
           ))}
         </div>
       </div>
@@ -199,45 +285,58 @@ function HowItWorks() {
   )
 }
 
-// ─── CTA ──────────────────────────────────────────────────────────────────────
-function CTA() {
+function DarkCTA() {
   return (
-    <section className="py-20 px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.4 }}
-        className="max-w-2xl mx-auto bg-brand-600 rounded-3xl p-12 text-center shadow-xl shadow-brand-200"
-      >
-        <h2 className="text-3xl font-black text-white mb-3">Start your free workspace</h2>
-        <p className="text-brand-200 mb-8 text-base">No credit card required. Up and running in 60 seconds.</p>
-        <Link
-          to="/register"
-          className="inline-flex items-center gap-2 bg-white text-brand-700 hover:bg-brand-50 font-semibold px-8 py-3.5 rounded-xl transition-colors text-sm"
-        >
-          Create workspace <ArrowRight size={16} />
-        </Link>
-      </motion.div>
+    <section className="relative bg-[#0a0a0a] py-28 px-6 overflow-hidden">
+      {[...Array(10)].map((_, i) => (
+        <div key={i} className="absolute border border-gray-700 opacity-20 rounded"
+          style={{ width: 60 + i * 50, height: 60 + i * 50, left: `${5 + i * 9}%`, top: `${15 - i * 2}%`, transform: `rotate(${15 + i * 12}deg)` }} />
+      ))}
+      <div className="relative z-10 max-w-2xl mx-auto text-center">
+        <h2 className="text-4xl sm:text-5xl font-black text-white mb-8 leading-tight">
+          Ready to streamline<br />your document workflows?
+        </h2>
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          <Link to="/register" className="bg-white text-black hover:bg-gray-100 font-medium text-sm px-7 py-3 rounded-lg transition-colors">Get Started</Link>
+          <Link to="/login" className="border border-gray-600 text-white hover:border-gray-400 font-medium text-sm px-7 py-3 rounded-lg transition-colors">Sign in</Link>
+        </div>
+      </div>
     </section>
   )
 }
 
-// ─── Footer ───────────────────────────────────────────────────────────────────
 function Footer() {
+  const cols = [
+    { title: 'Products', links: ['Documents', 'Workflows', 'Compliance', 'Team Management'] },
+    { title: 'Resources', links: ['Pricing', 'Documentation', 'Blog', 'Support Status'] },
+    { title: 'Company', links: ['About', 'Careers', 'Contact'] },
+    { title: 'Legal', links: ['Terms of Service', 'Privacy Policy', 'Security'] },
+  ]
   return (
-    <footer className="bg-gray-900 text-gray-400 px-6 py-12">
-      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-brand-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xs">V</span>
+    <footer className="bg-[#0a0a0a] border-t border-gray-800 px-6 pt-14 pb-10">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+          <div className="col-span-2 md:col-span-1">
+            <Logo dark />
+            <p className="text-xs text-gray-500 leading-relaxed mt-3">Secure document workflows for ambitious teams.</p>
           </div>
-          <span className="font-bold text-white">VaultFlow</span>
+          {cols.map(col => (
+            <div key={col.title}>
+              <h4 className="text-white text-sm font-semibold mb-3">{col.title}</h4>
+              <ul className="space-y-2">
+                {col.links.map(link => (
+                  <li key={link}><a href="#" className="text-gray-500 text-sm hover:text-white transition-colors">{link}</a></li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
-        <p className="text-sm">© 2026 VaultFlow. All rights reserved.</p>
-        <div className="flex gap-6 text-sm">
-          <Link to="/login" className="hover:text-white transition-colors">Sign in</Link>
-          <Link to="/register" className="hover:text-white transition-colors">Get started</Link>
+        <div className="border-t border-gray-800 pt-6 flex items-center justify-between gap-4 flex-wrap">
+          <p className="text-gray-600 text-xs">© 2026 VaultFlow. All rights reserved.</p>
+          <div className="flex gap-5">
+            <Link to="/login" className="text-gray-600 text-xs hover:text-white transition-colors">Sign in</Link>
+            <Link to="/register" className="text-gray-600 text-xs hover:text-white transition-colors">Get started</Link>
+          </div>
         </div>
       </div>
     </footer>

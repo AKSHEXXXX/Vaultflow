@@ -3,20 +3,17 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
-import Button  from '../components/ui/Button'
-import Input   from '../components/ui/Input'
 
 export default function LoginPage() {
   const { user, loading, login } = useAuth()
   const navigate = useNavigate()
   const [params] = useSearchParams()
 
-  const [form,    setForm]    = useState({ email: '', password: '' })
-  const [showPw,  setShowPw]  = useState(false)
-  const [error,   setError]   = useState(params.get('error') === 'oauth_failed' ? 'Google sign-in failed. Try again.' : '')
-  const [submitting, setSub]  = useState(false)
+  const [form, setForm] = useState({ email: '', password: '' })
+  const [showPw, setShowPw] = useState(false)
+  const [error, setError] = useState(params.get('error') === 'oauth_failed' ? 'Google sign-in failed. Try again.' : '')
+  const [submitting, setSub] = useState(false)
 
-  // Already logged in → dashboard
   useEffect(() => {
     if (!loading && user) navigate('/dashboard', { replace: true })
   }, [user, loading])
@@ -37,47 +34,24 @@ export default function LoginPage() {
     }
   }
 
-  const handleGoogle = () => {
-    window.location.href = '/oauth2/authorization/google'
-  }
+  const handleGoogle = () => { window.location.href = '/oauth2/authorization/google' }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className="w-full max-w-md"
+        transition={{ duration: 0.3 }}
+        className="w-full max-w-sm"
       >
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2">
-            <div className="w-9 h-9 bg-brand-600 rounded-xl flex items-center justify-center shadow-md shadow-brand-200">
-              <span className="text-white font-black text-base">V</span>
+        <div className="bg-white rounded-2xl shadow-sm p-8">
+          {/* Logo */}
+          <div className="flex flex-col items-center mb-7">
+            <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+              <span className="text-white font-black text-xl leading-none">✳</span>
             </div>
-            <span className="font-black text-gray-900 text-xl">VaultFlow</span>
-          </Link>
-          <p className="mt-3 text-gray-500 text-sm">Sign in to your workspace</p>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-          {/* Google OAuth */}
-          <button
-            onClick={handleGoogle}
-            type="button"
-            className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors mb-6"
-          >
-            <GoogleIcon />
-            Continue with Google
-          </button>
-
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-100" />
-            </div>
-            <div className="relative flex justify-center text-xs text-gray-400">
-              <span className="bg-white px-3">or sign in with email</span>
-            </div>
+            <h1 className="text-xl font-bold text-gray-900">Welcome</h1>
+            <p className="text-sm text-gray-400 mt-1">Log in to start using VaultFlow</p>
           </div>
 
           {error && (
@@ -86,48 +60,78 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <Input
-              label="Email"
-              name="email"
-              type="email"
-              placeholder="you@company.com"
-              value={form.email}
-              onChange={handleChange}
-              autoComplete="email"
-            />
-
+          <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+            {/* Email — outlined floating label style */}
             <div className="relative">
-              <Input
-                label="Password"
+              <label className="absolute -top-2 left-3 text-xs text-gray-500 bg-white px-1 z-10">
+                Email address *
+              </label>
+              <input
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                autoComplete="email"
+                className="w-full border-2 border-gray-200 focus:border-gray-900 rounded-lg px-3 py-3 text-sm outline-none transition-colors"
+              />
+            </div>
+
+            {/* Password — filled style */}
+            <div className="relative">
+              <input
                 name="password"
                 type={showPw ? 'text' : 'password'}
-                placeholder="••••••••"
+                placeholder="Password *"
                 value={form.password}
                 onChange={handleChange}
                 autoComplete="current-password"
+                className="w-full bg-gray-100 border border-transparent focus:border-gray-300 focus:bg-white rounded-lg px-3 py-3 pr-10 text-sm outline-none transition-all placeholder:text-gray-400"
               />
               <button
                 type="button"
                 onClick={() => setShowPw(v => !v)}
-                className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
 
-            <Button type="submit" className="w-full mt-2" loading={submitting}>
-              Sign in
-            </Button>
-          </form>
-        </div>
+            <div className="text-right -mt-1">
+              <a href="#" className="text-sm text-gray-500 hover:text-gray-800 transition-colors">Forgot password?</a>
+            </div>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Don&apos;t have an account?{' '}
-          <Link to="/register" className="text-brand-600 font-medium hover:underline">
-            Create workspace
-          </Link>
-        </p>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full flex items-center justify-center gap-2 bg-black hover:bg-gray-800 text-white font-medium text-sm py-3 rounded-xl transition-colors disabled:opacity-60 mt-1"
+            >
+              {submitting ? 'Signing in…' : '→ Continue'}
+            </button>
+          </form>
+
+          <p className="text-center text-sm text-gray-500 mt-4">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-gray-800 font-semibold hover:underline">Sign up</Link>
+          </p>
+
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-100" />
+            </div>
+            <div className="relative flex justify-center">
+              <span className="bg-white px-3 text-xs text-gray-400">OR</span>
+            </div>
+          </div>
+
+          <button
+            onClick={handleGoogle}
+            type="button"
+            className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            <GoogleIcon />
+            Continue with Google
+          </button>
+        </div>
       </motion.div>
     </div>
   )
