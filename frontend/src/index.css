@@ -2,6 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Shooting stars ────────────────────────────────────────── */
+@keyframes shoot {
+  0%   { transform: translateX(0) translateY(0) rotate(-35deg); opacity: 1; }
+  70%  { opacity: 1; }
+  100% { transform: translateX(600px) translateY(300px) rotate(-35deg); opacity: 0; }
+}
+.shooting-star {
+  position: absolute;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.9), transparent);
+  animation: shoot linear infinite;
+  opacity: 0;
+}
+
+/* ── Animated geometric rings ──────────────────────────────── */
+@keyframes ring-spin {
+  from { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(180deg) scale(1.08); }
+  to   { transform: rotate(360deg) scale(1); }
+}
+@keyframes ring-spin-reverse {
+  from { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(-180deg) scale(0.94); }
+  to   { transform: rotate(-360deg) scale(1); }
+}
+@keyframes ring-float {
+  0%, 100% { translate: 0px 0px; }
+  33%       { translate: 12px -10px; }
+  66%       { translate: -8px 14px; }
+}
+.geo-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.07);
+  animation: ring-spin 18s linear infinite, ring-float 8s ease-in-out infinite;
+}
+.geo-ring-rev {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.05);
+  animation: ring-spin-reverse 22s linear infinite, ring-float 10s ease-in-out infinite;
+}
+.geo-ring-dash {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed rgba(255,255,255,0.06);
+  animation: ring-spin 30s linear infinite;
+}
+
+/* ── Twinkling dots ─────────────────────────────────────────── */
+@keyframes twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50%       { opacity: 1; transform: scale(1.2); }
+}
+.twinkle-dot {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: white;
+  animation: twinkle ease-in-out infinite;
+}
+
 @layer base {
   html {
     font-family: 'Inter', sans-serif;

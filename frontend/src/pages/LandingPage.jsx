@@ -285,13 +285,83 @@ function FAQ() {
   )
 }
 
+const RINGS = [
+  { size: 200, top: '-60px',  left: '-60px',   type: 'geo-ring' },
+  { size: 340, top: '-120px', left: '-120px',  type: 'geo-ring-rev' },
+  { size: 480, top: '-180px', left: '-180px',  type: 'geo-ring-dash' },
+  { size: 160, top: '30%',   right: '-60px',  type: 'geo-ring' },
+  { size: 280, top: '20%',   right: '-110px', type: 'geo-ring-rev' },
+  { size: 400, top: '10%',   right: '-170px', type: 'geo-ring-dash' },
+  { size: 240, top: '55%',   left: '38%',     type: 'geo-ring-rev' },
+  { size: 120, top: '70%',   left: '55%',     type: 'geo-ring' },
+]
+
+const DOTS = [
+  { top: '15%', left: '12%',  delay: '0s',   dur: '2.4s' },
+  { top: '28%', left: '78%',  delay: '0.8s', dur: '3.1s' },
+  { top: '60%', left: '22%',  delay: '1.4s', dur: '2.7s' },
+  { top: '72%', left: '65%',  delay: '0.3s', dur: '2.0s' },
+  { top: '40%', left: '90%',  delay: '1.9s', dur: '3.5s' },
+  { top: '85%', left: '42%',  delay: '0.6s', dur: '2.2s' },
+  { top: '20%', left: '50%',  delay: '2.2s', dur: '2.8s' },
+  { top: '50%', left: '5%',   delay: '1.1s', dur: '3.0s' },
+  { top: '90%', left: '80%',  delay: '0.4s', dur: '2.5s' },
+  { top: '8%',  left: '35%',  delay: '1.6s', dur: '1.9s' },
+]
+
+const STARS = [
+  { left: '5%',  top: '60%', len: 120, delay: '0s',   dur: '3.2s' },
+  { left: '15%', top: '75%', len: 90,  delay: '1.1s', dur: '2.8s' },
+  { left: '28%', top: '55%', len: 150, delay: '0.4s', dur: '3.6s' },
+  { left: '38%', top: '80%', len: 80,  delay: '2.0s', dur: '2.5s' },
+  { left: '50%', top: '65%', len: 110, delay: '0.9s', dur: '3.0s' },
+  { left: '60%', top: '50%', len: 140, delay: '1.7s', dur: '3.4s' },
+  { left: '70%', top: '72%', len: 95,  delay: '0.2s', dur: '2.9s' },
+  { left: '80%', top: '58%', len: 130, delay: '1.4s', dur: '3.1s' },
+  { left: '88%', top: '78%', len: 75,  delay: '2.5s', dur: '2.6s' },
+  { left: '3%',  top: '85%', len: 160, delay: '0.7s', dur: '3.8s' },
+  { left: '45%', top: '88%', len: 100, delay: '1.9s', dur: '2.7s' },
+  { left: '92%', top: '62%', len: 115, delay: '3.1s', dur: '3.3s' },
+]
+
 function DarkCTA() {
   return (
     <section className="relative bg-[#0a0a0a] py-28 px-6 overflow-hidden">
-      {[...Array(10)].map((_, i) => (
-        <div key={i} className="absolute border border-gray-700 opacity-20 rounded"
-          style={{ width: 60 + i * 50, height: 60 + i * 50, left: `${5 + i * 9}%`, top: `${15 - i * 2}%`, transform: `rotate(${15 + i * 12}deg)` }} />
+
+      {/* Animated rings */}
+      {RINGS.map((r, i) => (
+        <div
+          key={i}
+          className={r.type}
+          style={{
+            width:  r.size,
+            height: r.size,
+            top:    r.top,
+            left:   r.left  ?? 'auto',
+            right:  r.right ?? 'auto',
+            animationDelay: `${i * 0.7}s`,
+          }}
+        />
       ))}
+
+      {/* Twinkling dots */}
+      {DOTS.map((d, i) => (
+        <div
+          key={i}
+          className="twinkle-dot"
+          style={{ top: d.top, left: d.left, animationDuration: d.dur, animationDelay: d.delay }}
+        />
+      ))}
+
+      {/* Shooting stars */}
+      {STARS.map((s, i) => (
+        <span
+          key={i}
+          className="shooting-star"
+          style={{ left: s.left, top: s.top, width: s.len, animationDuration: s.dur, animationDelay: s.delay }}
+        />
+      ))}
+
       <div className="relative z-10 max-w-2xl mx-auto text-center">
         <h2 className="text-4xl sm:text-5xl font-black text-white mb-8 leading-tight">
           Ready to streamline<br />your document workflows?
