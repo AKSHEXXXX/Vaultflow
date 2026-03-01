@@ -19,6 +19,7 @@ DOCKER_IMAGE="${DOCKER_IMAGE:?DOCKER_IMAGE must be set}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 EC2_HOST="${EC2_HOST:?EC2_HOST must be set}"
 EC2_USER="${EC2_USER:-ubuntu}"
+SSH_KEY="${SSH_KEY:?SSH_KEY must be set}"
 APP_DIR="${APP_DIR:-~/app}"
 COMPOSE_FILE="docker-compose.prod.yml"
 
@@ -26,13 +27,13 @@ echo "==> Deploying ${DOCKER_IMAGE}:${IMAGE_TAG} to ${EC2_USER}@${EC2_HOST}"
 
 # ---- Step 1: Copy the latest compose file to the server ----
 echo "==> Syncing ${COMPOSE_FILE}..."
-scp -o StrictHostKeyChecking=no \
+scp -i "${SSH_KEY}" -o StrictHostKeyChecking=no \
     "${COMPOSE_FILE}" \
     "${EC2_USER}@${EC2_HOST}:${APP_DIR}/${COMPOSE_FILE}"
 
 # ---- Step 2: SSH in and perform a rolling update of the backend only ----
 # Using --no-deps so postgres/redis are NOT restarted (zero-downtime for data services)
-ssh -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" bash -s << EOF
+ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" bash -s << EOF
 set -euo pipefail
 cd ${APP_DIR}
 
