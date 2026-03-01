@@ -20,6 +20,11 @@ spring:
   jpa:
     show-sql: false
 
+  # Trust the X-Forwarded-Proto header from nginx so Spring Boot
+  # generates HTTPS redirect URIs instead of HTTP
+  server:
+    forward-headers-strategy: framework
+
   security:
     oauth2:
       client:
