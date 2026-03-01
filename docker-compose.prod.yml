@@ -101,7 +101,6 @@ volumes:
 
 networks:
   saas-internal:
-    driver: bridge
-    internal: true          # Postgres + Redis not reachable from outside host
+    driver: bridge          # Internal services network (postgres, redis, backend)
   saas-external:
-    driver: bridge           # Only nginx is on the external network
+    driver: bridge           # External network for nginx proxy
