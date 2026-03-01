@@ -1,14 +1,3 @@
-# =============================================================================
-# .github/workflows/deploy.yml
-# CI/CD Pipeline — Test → Build → Push to Docker Hub → Deploy to EC2
-#
-# Triggers: every push to `main`
-# Jobs (in order):
-#   1. test     — Run Maven tests
-#   2. build    — Build & push Docker image (depends on: test)
-#   3. deploy   — SSH deploy to EC2 (depends on: build)
-# =============================================================================
-
 name: CI/CD
 
 on:
@@ -18,15 +7,12 @@ on:
     branches: [ main ]
 
 jobs:
-  # ============================================================
-  # Job 1: Run Tests
-  # ============================================================
+
   test:
-    name: Run Tests
+    name: Test
     runs-on: ubuntu-latest
 
     services:
-      # Spin up a real PostgreSQL for integration tests
       postgres:
         image: postgres:15-alpine
         env:
@@ -41,7 +27,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-      # Spin up Redis for rate-limit / cache tests
       redis:
         image: redis:7-alpine
         ports:
@@ -53,25 +38,23 @@ jobs:
           --health-retries 5
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
+          distribution: temurin
+          cache: maven
 
       - name: Run tests
         env:
-          # Override datasource for CI test DB
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/saas_test
           SPRING_DATASOURCE_USERNAME: saas_user
           SPRING_DATASOURCE_PASSWORD: saas_password
           SPRING_DATA_REDIS_HOST: localhost
-          SPRING_DATA_REDIS_PORT: 6379
-          # Dummy values so context loads; S3 calls are mocked in tests
+          SPRING_DATA_REDIS_PORT: '6379'
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_REGION: us-east-1
@@ -89,99 +72,59 @@ jobs:
           path: target/surefire-reports/
           retention-days: 7
 
-  # ============================================================
-  # Job 2: Build Docker Image & Push to Docker Hub
-  # Runs only on push to main (not on PRs)
-  # ============================================================
   build:
-    name: Build & Push Docker Image
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
-    outputs:
-      image_tag: ${{ steps.meta.outputs.version }}
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Docker Hub
+      - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract Docker metadata (tags + labels)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.DOCKER_USERNAME }}/saas-backend
-          tags: |
-            # Tag with short SHA for traceability
-            type=sha,format=short,prefix=sha-
-            # Also tag as "latest" on main
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push image
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          # Layer caching to speed up rebuilds
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/saas-backend:latest
+            ${{ secrets.DOCKER_USERNAME }}/saas-backend:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Image digest
-        run: echo "Pushed ${{ secrets.DOCKER_USERNAME }}/saas-backend digest ${{ steps.build-push.outputs.digest }}"
-
-  # ============================================================
-  # Job 3: Deploy to EC2
-  # Runs only on push to main after a successful build
-  # ============================================================
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    environment:
-      name: production
-      url: https://${{ secrets.EC2_HOST }}
+    environment: production
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up SSH key
+      - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Run deploy script on EC2
+      - name: Deploy
         env:
           DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/saas-backend
-          IMAGE_TAG: sha-${{ github.sha }}
+          IMAGE_TAG: ${{ github.sha }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
-        run: |
-          export GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_key"
-          SSH_KEY=~/.ssh/deploy_key bash scripts/deploy.sh
-
-      - name: Notify success
-        if: success()
-        run: |
-          echo "Deployed ${{ secrets.DOCKER_USERNAME }}/saas-backend:sha-${{ github.sha }} to ${{ secrets.EC2_HOST }}"
-
-      - name: Notify failure
-        if: failure()
-        run: |
-          echo "❌ Deployment failed. Check the logs above."
-          exit 1
+        run: SSH_KEY=~/.ssh/deploy_key bash scripts/deploy.sh
