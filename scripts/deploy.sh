@@ -1,20 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
-# scripts/deploy.sh — EC2 Production Deployment Script
-#
-# Usage (called by GitHub Actions or manually):
-#   SSH_KEY=/path/to/key.pem DOCKER_IMAGE=user/saas-backend IMAGE_TAG=abc123 \
-#   EC2_HOST=1.2.3.4 EC2_USER=ubuntu ./scripts/deploy.sh
-#
-# Assumptions on the EC2 instance:
-#   - Docker + Docker Compose v2 installed
-#   - App lives at ~/app/
-#   - .env.prod already placed at ~/app/.env.prod (one-time manual setup)
-#   - docker-compose.prod.yml is synced via this script
+# scripts/deploy.sh - EC2 Production Deployment Script
 # =============================================================================
 set -euo pipefail
 
-# ---- Config (override via env vars or GitHub Actions secrets) ----
 DOCKER_IMAGE="${DOCKER_IMAGE:?DOCKER_IMAGE must be set}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 EC2_HOST="${EC2_HOST:?EC2_HOST must be set}"
@@ -22,64 +11,64 @@ EC2_USER="${EC2_USER:-ubuntu}"
 SSH_KEY="${SSH_KEY:?SSH_KEY must be set}"
 DOCKER_USERNAME="${DOCKER_USERNAME:?DOCKER_USERNAME must be set}"
 DOCKER_PASSWORD="${DOCKER_PASSWORD:?DOCKER_PASSWORD must be set}"
-APP_DIR="${APP_DIR:-~/app}"
+APP_DIR="${APP_DIR:-/home/${EC2_USER}/app}"
 COMPOSE_FILE="docker-compose.prod.yml"
 
 echo "==> Deploying ${DOCKER_IMAGE}:${IMAGE_TAG} to ${EC2_USER}@${EC2_HOST}"
 
-# ---- Step 0: Ensure app directory exists on EC2 ----
 ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "mkdir -p ${APP_DIR}"
 
-# ---- Step 1: Copy the latest compose file to the server ----
 echo "==> Syncing ${COMPOSE_FILE}..."
 scp -i "${SSH_KEY}" -o StrictHostKeyChecking=no \
     "${COMPOSE_FILE}" \
     "${EC2_USER}@${EC2_HOST}:${APP_DIR}/${COMPOSE_FILE}"
 
-# ---- Step 2: SSH in and perform a rolling update of the backend only ----
-# Using --no-deps so postgres/redis are NOT restarted (zero-downtime for data services)
-ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" bash -s << EOF
+echo "==> Running deployment on EC2..."
+ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" \
+    DOCKER_IMAGE="${DOCKER_IMAGE}" \
+    IMAGE_TAG="${IMAGE_TAG}" \
+    DOCKER_USERNAME="${DOCKER_USERNAME}" \
+    DOCKER_PASSWORD="${DOCKER_PASSWORD}" \
+    APP_DIR="${APP_DIR}" \
+    COMPOSE_FILE="${COMPOSE_FILE}" \
+    bash << 'EOF'
 set -euo pipefail
 
-# ---- Install Docker if not present ----
 if ! command -v docker &>/dev/null; then
   echo "--- Installing Docker ---"
-  curl -fsSL https://get.docker.com | sh
-  sudo usermod -aG docker ${EC2_USER}
-  sudo systemctl enable docker
-  sudo systemctl start docker
+  curl -fsSL https://get.docker.com | sudo sh
+  sudo usermod -aG docker "${USER}"
+  sudo systemctl enable --now docker
   echo "--- Docker installed ---"
 fi
 
-# Use sudo for docker commands if not in docker group yet
-DOCKER="docker"
-if ! groups | grep -q docker; then
-  DOCKER="sudo docker"
-fi
-
-cd ${APP_DIR}
+cd "${APP_DIR}"
 
 echo "--- Logging in to Docker Hub ---"
-echo "${DOCKER_PASSWORD}" | \$DOCKER login -u "${DOCKER_USERNAME}" --password-stdin
+echo "${DOCKER_PASSWORD}" | sudo docker login -u "${DOCKER_USERNAME}" --password-stdin
 
-echo "--- Pulling new image: ${DOCKER_IMAGE}:${IMAGE_TAG} ---"
-DOCKER_IMAGE=${DOCKER_IMAGE} IMAGE_TAG=${IMAGE_TAG} \
-  \$DOCKER compose -f ${COMPOSE_FILE} --env-file .env.prod pull backend
+echo "--- Pulling ${DOCKER_IMAGE}:${IMAGE_TAG} ---"
+DOCKER_IMAGE="${DOCKER_IMAGE}" IMAGE_TAG="${IMAGE_TAG}" \
+  sudo docker compose -f "${COMPOSE_FILE}" --env-file .env.prod pull backend
 
-echo "--- Restarting backend (no-deps rolling update) ---"
-DOCKER_IMAGE=${DOCKER_IMAGE} IMAGE_TAG=${IMAGE_TAG} \
-  \$DOCKER compose -f ${COMPOSE_FILE} --env-file .env.prod up -d --no-deps --force-recreate backend
+echo "--- Restarting backend ---"
+DOCKER_IMAGE="${DOCKER_IMAGE}" IMAGE_TAG="${IMAGE_TAG}" \
+  sudo docker compose -f "${COMPOSE_FILE}" --env-file .env.prod up -d --no-deps --force-recreate backend
 
-echo "--- Waiting for backend health check... ---"
-timeout 120 bash -c \
-  'until \$DOCKER inspect --format="{{.State.Health.Status}}" \$(\$DOCKER compose -f ${COMPOSE_FILE} ps -q backend) 2>/dev/null | grep -q "healthy"; do sleep 3; done'
+echo "--- Waiting for health (up to 120s) ---"
+for i in $(seq 1 40); do
+  CID=$(sudo docker compose -f "${COMPOSE_FILE}" ps -q backend 2>/dev/null || true)
+  STATUS=$(sudo docker inspect --format='{{.State.Health.Status}}' "${CID}" 2>/dev/null || echo "starting")
+  echo "  [${i}/40] Health: ${STATUS}"
+  [ "${STATUS}" = "healthy" ] && break
+  sleep 3
+done
 
-echo "--- Removing unused images to free disk space ---"
-\$DOCKER image prune -f
+echo "--- Pruning old images ---"
+sudo docker image prune -f
 
-echo "--- Deployment complete ---"
-\$DOCKER compose -f ${COMPOSE_FILE} ps
-docker compose -f ${COMPOSE_FILE} ps
+echo "--- Done ---"
+sudo docker compose -f "${COMPOSE_FILE}" ps
 EOF
 
 echo "==> Deploy finished successfully."
