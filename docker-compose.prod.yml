@@ -75,6 +75,21 @@ services:
       start_period: 60s
       retries: 3
 
+  # ── React / Vite Frontend ───────────────────────────────────────────────────
+  frontend:
+    image: ${DOCKER_FRONTEND_IMAGE}:${IMAGE_TAG:-latest}
+    container_name: saas-frontend-prod
+    restart: always
+    # No public ports — all traffic comes through nginx
+    networks:
+      - saas-internal
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:80/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 3
+
   # ── Nginx Reverse Proxy ─────────────────────────────────────────────────────
   nginx:
     image: nginx:1.25-alpine
@@ -89,6 +104,7 @@ services:
       - nginx_logs:/var/log/nginx
     depends_on:
       - backend
+      - frontend
     networks:
       - saas-internal
       - saas-external

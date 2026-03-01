@@ -98,11 +98,14 @@ Testing Session 5
 	•	Approve
 	•	Reject
 
-⚠️ Known Issue — Role Enforcement Not Fully Tested
-	•	Registration always assigns ADMIN to the first user of a tenant
-	•	submit (EMPLOYEE/ADMIN) and approve/reject (MANAGER/ADMIN) role guards are implemented but only tested with ADMIN role
-	•	To fully validate: update a user's role directly in DB to EMPLOYEE or MANAGER, or build a user-management endpoint (Phase 7) that allows assigning roles
-	•	Fix needed before Phase 8 (Deployment): add a way to create users with explicit roles (e.g. invite flow or admin-only role-assignment endpoint)
+✅ Resolved — Role Enforcement (User Management Module)
+	•	Added UserController, UserService, and DTOs (UserResponse, InviteUserRequest, UpdateRoleRequest)
+	•	POST /api/v1/users/invite — ADMIN can create EMPLOYEE/MANAGER users in the same tenant
+	•	PUT /api/v1/users/{id}/role — ADMIN can change any tenant user's role
+	•	DELETE /api/v1/users/{id} — ADMIN can remove users
+	•	GET /api/v1/users/me — any user can view their own profile
+	•	GET /api/v1/users — any user can list all users in the same tenant
+	•	Workflow role enforcement (submit=EMPLOYEE/ADMIN, approve/reject=MANAGER/ADMIN) is now fully testable
 
 ⸻
 

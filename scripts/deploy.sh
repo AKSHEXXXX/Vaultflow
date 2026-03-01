@@ -5,6 +5,7 @@
 set -euo pipefail
 
 DOCKER_IMAGE="${DOCKER_IMAGE:?DOCKER_IMAGE must be set}"
+DOCKER_FRONTEND_IMAGE="${DOCKER_FRONTEND_IMAGE:?DOCKER_FRONTEND_IMAGE must be set}"
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 EC2_HOST="${EC2_HOST:?EC2_HOST must be set}"
 EC2_USER="${EC2_USER:-ubuntu}"
@@ -26,6 +27,7 @@ scp -i "${SSH_KEY}" -o StrictHostKeyChecking=no \
 echo "==> Running deployment on EC2..."
 ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" \
     DOCKER_IMAGE="${DOCKER_IMAGE}" \
+    DOCKER_FRONTEND_IMAGE="${DOCKER_FRONTEND_IMAGE}" \
     IMAGE_TAG="${IMAGE_TAG}" \
     DOCKER_USERNAME="${DOCKER_USERNAME}" \
     DOCKER_PASSWORD="${DOCKER_PASSWORD}" \
@@ -76,6 +78,14 @@ for i in $(seq 1 40); do
   [ "${STATUS}" = "healthy" ] && break
   sleep 3
 done
+
+echo "--- Pulling frontend image ${DOCKER_FRONTEND_IMAGE}:${IMAGE_TAG} ---"
+DOCKER_IMAGE="${DOCKER_IMAGE}" DOCKER_FRONTEND_IMAGE="${DOCKER_FRONTEND_IMAGE}" IMAGE_TAG="${IMAGE_TAG}" \
+  sudo docker compose -f "${COMPOSE_FILE}" --env-file .env.prod pull frontend
+
+echo "--- Restarting frontend and nginx ---"
+DOCKER_IMAGE="${DOCKER_IMAGE}" DOCKER_FRONTEND_IMAGE="${DOCKER_FRONTEND_IMAGE}" IMAGE_TAG="${IMAGE_TAG}" \
+  sudo docker compose -f "${COMPOSE_FILE}" --env-file .env.prod up -d --no-deps --force-recreate frontend nginx
 
 echo "--- Pruning old images ---"
 sudo docker image prune -f
