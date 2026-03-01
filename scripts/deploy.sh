@@ -25,6 +25,9 @@ COMPOSE_FILE="docker-compose.prod.yml"
 
 echo "==> Deploying ${DOCKER_IMAGE}:${IMAGE_TAG} to ${EC2_USER}@${EC2_HOST}"
 
+# ---- Step 0: Ensure app directory exists on EC2 ----
+ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "mkdir -p ${APP_DIR}"
+
 # ---- Step 1: Copy the latest compose file to the server ----
 echo "==> Syncing ${COMPOSE_FILE}..."
 scp -i "${SSH_KEY}" -o StrictHostKeyChecking=no \
