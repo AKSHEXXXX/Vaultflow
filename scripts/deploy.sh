@@ -19,10 +19,15 @@ echo "==> Deploying ${DOCKER_IMAGE}:${IMAGE_TAG} to ${EC2_USER}@${EC2_HOST}"
 
 ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "mkdir -p ${APP_DIR}"
 
-echo "==> Syncing ${COMPOSE_FILE}..."
+echo "==> Syncing ${COMPOSE_FILE} and nginx config..."
 scp -i "${SSH_KEY}" -o StrictHostKeyChecking=no \
     "${COMPOSE_FILE}" \
     "${EC2_USER}@${EC2_HOST}:${APP_DIR}/${COMPOSE_FILE}"
+
+ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" "mkdir -p ${APP_DIR}/nginx/certs"
+scp -i "${SSH_KEY}" -o StrictHostKeyChecking=no \
+    nginx/nginx.conf \
+    "${EC2_USER}@${EC2_HOST}:${APP_DIR}/nginx/nginx.conf"
 
 echo "==> Running deployment on EC2..."
 ssh -i "${SSH_KEY}" -o StrictHostKeyChecking=no "${EC2_USER}@${EC2_HOST}" \
@@ -89,6 +94,53 @@ DOCKER_IMAGE="${DOCKER_IMAGE}" DOCKER_FRONTEND_IMAGE="${DOCKER_FRONTEND_IMAGE}" 
 
 echo "--- Pruning old images ---"
 sudo docker image prune -f
+
+# ==========================================================================
+# Let's Encrypt SSL certificate (runs once; renews when <30 days left)
+# ==========================================================================
+DOMAIN="vaultflow.duckdns.org"
+CERT_DIR="${APP_DIR}/nginx/certs"
+CERT_FILE="${CERT_DIR}/fullchain.pem"
+
+# Install certbot if missing
+if ! command -v certbot &>/dev/null; then
+  echo "--- Installing certbot ---"
+  sudo apt-get update -q && sudo apt-get install -y -q certbot
+fi
+
+# Check if cert is missing or expiring within 30 days
+NEEDS_CERT=false
+if [ ! -f "${CERT_FILE}" ]; then
+  NEEDS_CERT=true
+elif ! sudo openssl x509 -checkend 2592000 -noout -in "${CERT_FILE}" 2>/dev/null; then
+  NEEDS_CERT=true
+fi
+
+if [ "${NEEDS_CERT}" = "true" ]; then
+  echo "--- Obtaining Let's Encrypt certificate for ${DOMAIN} ---"
+  # Stop nginx to free port 80 for standalone challenge
+  sudo docker compose -f "${COMPOSE_FILE}" stop nginx 2>/dev/null || true
+
+  sudo certbot certonly \
+    --standalone \
+    --non-interactive \
+    --agree-tos \
+    --email admin@vaultflow.duckdns.org \
+    -d "${DOMAIN}" \
+    --keep-until-expiring
+
+  # Copy certs to the nginx certs directory
+  sudo cp "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" "${CERT_DIR}/fullchain.pem"
+  sudo cp "/etc/letsencrypt/live/${DOMAIN}/privkey.pem"   "${CERT_DIR}/privkey.pem"
+  sudo chown ubuntu:ubuntu "${CERT_DIR}/fullchain.pem" "${CERT_DIR}/privkey.pem"
+  sudo chmod 644 "${CERT_DIR}/fullchain.pem"
+  sudo chmod 640 "${CERT_DIR}/privkey.pem"
+
+  echo "--- Restarting nginx with new cert ---"
+  sudo docker compose -f "${COMPOSE_FILE}" up -d nginx
+else
+  echo "--- SSL cert is valid, no renewal needed ---"
+fi
 
 echo "--- Done ---"
 sudo docker compose -f "${COMPOSE_FILE}" ps
