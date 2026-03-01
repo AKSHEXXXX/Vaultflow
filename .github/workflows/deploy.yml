@@ -9,17 +9,13 @@
 #   3. deploy   — SSH deploy to EC2 (depends on: build)
 # =============================================================================
 
-name: CI/CD — Test, Build, Deploy
+name: CI/CD
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-    # On PRs: only run test + build (no deploy)
-
-env:
-  DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/saas-backend
 
 jobs:
   # ============================================================
@@ -123,7 +119,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.DOCKER_IMAGE }}
+          images: ${{ secrets.DOCKER_USERNAME }}/saas-backend
           tags: |
             # Tag with short SHA for traceability
             type=sha,format=short,prefix=sha-
@@ -143,7 +139,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Image digest
-        run: echo "Pushed ${{ env.DOCKER_IMAGE }} — digest ${{ steps.build-push.outputs.digest }}"
+        run: echo "Pushed ${{ secrets.DOCKER_USERNAME }}/saas-backend digest ${{ steps.build-push.outputs.digest }}"
 
   # ============================================================
   # Job 3: Deploy to EC2
@@ -171,19 +167,18 @@ jobs:
 
       - name: Run deploy script on EC2
         env:
-          DOCKER_IMAGE: ${{ env.DOCKER_IMAGE }}
+          DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/saas-backend
           IMAGE_TAG: sha-${{ github.sha }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USER: ${{ secrets.EC2_USER }}
         run: |
-          # Point the script at our key
           export GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_key"
           SSH_KEY=~/.ssh/deploy_key bash scripts/deploy.sh
 
       - name: Notify success
         if: success()
         run: |
-          echo "✅ Deployed ${{ env.DOCKER_IMAGE }}:sha-${{ github.sha }} to ${{ secrets.EC2_HOST }}"
+          echo "Deployed ${{ secrets.DOCKER_USERNAME }}/saas-backend:sha-${{ github.sha }} to ${{ secrets.EC2_HOST }}"
 
       - name: Notify failure
         if: failure()
