@@ -51,11 +51,24 @@ echo "--- Pulling ${DOCKER_IMAGE}:${IMAGE_TAG} ---"
 DOCKER_IMAGE="${DOCKER_IMAGE}" IMAGE_TAG="${IMAGE_TAG}" \
   sudo docker compose -f "${COMPOSE_FILE}" --env-file .env.prod pull backend
 
+echo "--- Starting postgres and redis (if not running) ---"
+DOCKER_IMAGE="${DOCKER_IMAGE}" IMAGE_TAG="${IMAGE_TAG}" \
+  sudo docker compose -f "${COMPOSE_FILE}" --env-file .env.prod up -d postgres redis
+
+echo "--- Waiting for postgres/redis to be healthy (up to 60s) ---"
+for i in $(seq 1 20); do
+  PG_STATUS=$(sudo docker inspect --format='{{.State.Health.Status}}' saas-postgres-prod 2>/dev/null || echo "starting")
+  RD_STATUS=$(sudo docker inspect --format='{{.State.Health.Status}}' saas-redis-prod 2>/dev/null || echo "starting")
+  echo "  [${i}/20] postgres: ${PG_STATUS}  redis: ${RD_STATUS}"
+  [ "${PG_STATUS}" = "healthy" ] && [ "${RD_STATUS}" = "healthy" ] && break
+  sleep 3
+done
+
 echo "--- Restarting backend ---"
 DOCKER_IMAGE="${DOCKER_IMAGE}" IMAGE_TAG="${IMAGE_TAG}" \
   sudo docker compose -f "${COMPOSE_FILE}" --env-file .env.prod up -d --no-deps --force-recreate backend
 
-echo "--- Waiting for health (up to 120s) ---"
+echo "--- Waiting for backend health (up to 120s) ---"
 for i in $(seq 1 40); do
   CID=$(sudo docker compose -f "${COMPOSE_FILE}" ps -q backend 2>/dev/null || true)
   STATUS=$(sudo docker inspect --format='{{.State.Health.Status}}' "${CID}" 2>/dev/null || echo "starting")

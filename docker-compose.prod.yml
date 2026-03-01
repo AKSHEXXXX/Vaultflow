@@ -64,6 +64,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    ports:
+      - "8080:8080"    # Direct access (nginx is optional via --profile proxy)
     networks:
       - saas-internal
     healthcheck:
@@ -78,6 +80,7 @@ services:
     image: nginx:1.25-alpine
     container_name: saas-nginx-prod
     restart: always
+    profiles: ["proxy"]    # Only starts when: docker compose --profile proxy up
     ports:
       - "80:80"
       - "443:443"
