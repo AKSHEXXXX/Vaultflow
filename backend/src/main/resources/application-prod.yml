@@ -53,9 +53,8 @@ app:
 
 aws:
   s3:
-    access-key: ${AWS_ACCESS_KEY_ID}
-    secret-key: ${AWS_SECRET_ACCESS_KEY}
-    region: ${AWS_REGION}
+    # No access-key / secret-key here — EC2 IAM role provides credentials automatically.
+    region: ${AWS_REGION:ap-south-1}
     bucket-name: ${AWS_S3_BUCKET}
     presigned-url-expiration: 3600
 
