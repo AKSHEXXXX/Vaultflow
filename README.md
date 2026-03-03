@@ -1,96 +1,244 @@
-# VaultFlow
+<div align="center">
 
-**Multi-tenant document workflow platform** — built for teams that need secure document management with structured review and approval flows, isolated per organisation.
+# 🔐 VaultFlow
 
-Each tenant gets their own isolated space to upload, manage, and route documents through a full lifecycle: **Draft → Submitted → Approved / Rejected**. Every action is tracked with a full audit trail.
+### Multi-tenant document workflow platform
+
+**Upload · Review · Approve · Archive — all in one secure workspace**
+
+[![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen?style=flat-square&logo=springboot)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev/)
+[![AWS S3](https://img.shields.io/badge/AWS-S3-FF9900?style=flat-square&logo=amazons3)](https://aws.amazon.com/s3/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker)](https://www.docker.com/)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+
+[Live Demo](http://65.1.133.248) · [API Docs](http://65.1.133.248/swagger-ui.html)
+
+</div>
 
 ---
 
-## What it does
+## What is VaultFlow?
 
-- 🔐 **Auth** — JWT-based login, token refresh, and Google OAuth2 sign-in
-- 🏢 **Multi-tenancy** — Complete data isolation between organisations at the database level
-- 📄 **Documents** — Upload files to AWS S3, retrieve via secure pre-signed URLs, scoped to your tenant
-- 🔄 **Workflow engine** — Submit documents for review; Managers approve or reject; full history logged per document
-- 🚦 **Rate limiting** — Redis-backed sliding window rate limiter protecting all API endpoints
-- ⚡ **Caching** — Redis cache on document listings for fast repeated reads
-- 🛡️ **Role-based access** — `EMPLOYEE`, `MANAGER`, `ADMIN` roles enforced at the endpoint level
+VaultFlow is a **production-ready, multi-tenant SaaS platform** that gives organisations a structured way to manage documents through a full review lifecycle. Each company (tenant) gets a completely isolated workspace — their users, documents, and audit logs never mix with anyone else's.
+
+The core workflow is simple:
+
+```
+Employee uploads a document
+        ↓
+   DRAFT  →  [Submit]  →  PENDING
+                               ↓
+                    Manager reviews
+                    ↙            ↘
+               APPROVED        REJECTED
+```
+
+Every transition is timestamped and stored in an immutable audit trail.
 
 ---
 
-## Tech Stack
+## ✨ Key Features
 
-| Layer | Technology |
+| Feature | Detail |
 |---|---|
-| Backend | Java 25 · Spring Boot 3.5 · Spring Security |
-| Database | PostgreSQL 15 (Flyway migrations) |
-| Cache / Rate limit | Redis 7 |
-| File storage | AWS S3 (LocalStack for local dev) |
-| Auth | JWT · Google OAuth2 (Spring Security OAuth2 Client) |
-| Docs | SpringDoc / Swagger UI |
-| Containerisation | Docker · Docker Compose |
-| Reverse proxy | Nginx (rate limiting, gzip, security headers, TLS) |
-| CI/CD | GitHub Actions → Docker Hub → EC2 |
+| 🔐 **Authentication** | JWT access + refresh tokens, Google OAuth2 sign-in |
+| 🏢 **Multi-tenancy** | Full DB-level isolation — tenants can't see each other's data |
+| 📄 **Document management** | Upload any file (PDF, Word, Excel, images) up to 20 MB |
+| ☁️ **AWS S3 storage** | Files stored securely in S3; downloads via signed URLs (1-hr expiry) |
+| 🔄 **Approval workflow** | DRAFT → PENDING → APPROVED / REJECTED with full history |
+| 🛡️ **Role-based access** | `ADMIN` · `MANAGER` · `EMPLOYEE` enforced at every endpoint |
+| ⚡ **Redis caching** | Document listings cached per-tenant, evicted on mutations |
+| 🚦 **Rate limiting** | Sliding-window limiter (100 req / 60 s per IP) backed by Redis |
+| 🔎 **Audit trail** | Immutable log of every workflow action per document |
+| 📱 **Responsive UI** | React + Tailwind frontend with drag-and-drop file upload |
 
 ---
 
-## Running locally
+## 🛠 Tech Stack
 
-**Prerequisites:** Docker, Java 25+, Maven 3.9+
+### Backend
+| Technology | Purpose |
+|---|---|
+| **Java 21** + **Spring Boot 3** | Core application framework |
+| **Spring Security** | JWT auth, OAuth2, method-level RBAC |
+| **PostgreSQL 15** | Primary database |
+| **Flyway** | Database schema versioning & migrations |
+| **Redis 7** | Caching (document lists) + rate limiting (sliding window) |
+| **AWS SDK v2** | S3 file upload, presigned URL generation |
+| **SpringDoc / Swagger UI** | Auto-generated interactive API docs |
+
+### Frontend
+| Technology | Purpose |
+|---|---|
+| **React 18** + **Vite** | SPA framework & build tool |
+| **Tailwind CSS** | Utility-first styling |
+| **Framer Motion** | Animations and transitions |
+| **Axios** | HTTP client with global auth + error interceptors |
+| **React Router v6** | Client-side routing |
+
+### Infrastructure
+| Technology | Purpose |
+|---|---|
+| **Docker** + **Docker Compose** | Container orchestration (dev & prod) |
+| **Nginx** | Reverse proxy, gzip compression, security headers |
+| **AWS EC2** | Production hosting |
+| **GitHub Actions** | CI/CD pipeline (test → build → push → deploy) |
+| **Docker Hub** | Container image registry |
+| **LocalStack** | AWS S3 emulation for local development |
+
+---
+
+## 🚀 Running Locally
+
+### Prerequisites
+- **Docker** & **Docker Compose** (for infrastructure)
+- **Java 21+** and **Maven 3.9+** (for the backend)
+- **Node.js 18+** and **npm** (for the frontend)
+
+### 1 — Clone the repo
 
 ```bash
-# 1. Start the dev infrastructure (Postgres, Redis, LocalStack S3)
+git clone https://github.com/AKSHEXXXX/Vaultflow.git
+cd Vaultflow
+```
+
+### 2 — Start the dev infrastructure
+
+This starts **PostgreSQL**, **Redis**, and **LocalStack** (S3 emulator) in Docker:
+
+```bash
 docker compose up -d
+```
 
-# 2. Copy the example env file and fill in your values
-cp .env.example .env
+### 3 — Run the backend
 
-# 3. Start the app on the dev profile
+The `dev` profile auto-connects to LocalStack S3 and the local DB — no AWS account needed.
+
+```bash
+cd backend
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-The API is available at `http://localhost:8080`  
+Backend is live at `http://localhost:8080`  
 Swagger UI: `http://localhost:8080/swagger-ui.html`  
 Health check: `http://localhost:8080/actuator/health`
 
+### 4 — Run the frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend is live at `http://localhost:5173`
+
 ---
 
-## API Overview
+## 📡 API Overview
 
-| Group | Endpoints |
+| Group | Method | Endpoint | Access |
+|---|---|---|---|
+| **Auth** | POST | `/api/v1/auth/register` | Public |
+| | POST | `/api/v1/auth/login` | Public |
+| | POST | `/api/v1/auth/refresh` | Public |
+| | POST | `/api/v1/auth/logout` | Authenticated |
+| **Users** | GET | `/api/v1/users/me` | Authenticated |
+| | GET | `/api/v1/users` | Authenticated |
+| | POST | `/api/v1/users/invite` | ADMIN only |
+| | PUT | `/api/v1/users/{id}/role` | ADMIN only |
+| | DELETE | `/api/v1/users/{id}` | ADMIN only |
+| **Tenants** | GET | `/api/v1/tenants/me` | Authenticated |
+| | PUT | `/api/v1/tenants/me` | ADMIN only |
+| **Documents** | POST | `/api/v1/documents` | EMPLOYEE, ADMIN |
+| | GET | `/api/v1/documents` | Authenticated |
+| | GET | `/api/v1/documents/{id}` | Authenticated |
+| | GET | `/api/v1/documents/{id}/download` | Authenticated |
+| | DELETE | `/api/v1/documents/{id}` | ADMIN |
+| **Workflow** | POST | `/api/v1/documents/{id}/submit` | EMPLOYEE, ADMIN |
+| | POST | `/api/v1/documents/{id}/approve` | MANAGER, ADMIN |
+| | POST | `/api/v1/documents/{id}/reject` | MANAGER, ADMIN |
+| | GET | `/api/v1/documents/{id}/history` | Authenticated |
+
+Full interactive schema → Swagger UI.
+
+---
+
+## 🏗 Project Structure
+
+```
+VaultFlow/
+├── backend/                        # Spring Boot application
+│   └── src/main/java/com/demoapplication/saas/
+│       ├── auth/                   # Register, login, JWT, refresh tokens, OAuth2
+│       ├── user/                   # User entity, CRUD, role management
+│       ├── tenant/                 # Tenant entity, context holder (multi-tenancy)
+│       ├── document/               # Document entity, S3 upload/download/delete
+│       ├── workflow/               # Approval workflow engine + audit history
+│       ├── ratelimit/              # Redis sliding-window rate limiter
+│       ├── security/               # JWT filter, custom principals, OAuth2 handlers
+│       ├── config/                 # Security, CORS, S3, Redis, Swagger config
+│       └── common/                 # ApiResponse wrapper, GlobalExceptionHandler
+│
+├── frontend/                       # React + Vite SPA
+│   └── src/
+│       ├── pages/                  # Dashboard, Documents, Upload, Login, Settings…
+│       ├── components/ui/          # Button, Card, Badge, Input, Modal, Skeleton
+│       ├── api/                    # Axios instances for each resource
+│       ├── context/                # AuthContext, ToastContext
+│       └── layouts/                # AppLayout with role-aware sidebar
+│
+├── nginx/                          # Nginx reverse proxy config
+├── scripts/deploy.sh               # EC2 deployment script
+├── docker-compose.yml              # Local dev stack (Postgres + Redis + LocalStack)
+├── docker-compose.prod.yml         # Production stack (Postgres + Redis + S3)
+└── .github/workflows/              # CI/CD pipeline
+    ├── deploy.yml                  # Auto-deploy on push to main
+    └── fresh-deploy.yml            # Manual clean-start deployment
+```
+
+---
+
+## 🚢 Deployment (CI/CD)
+
+Every push to `main` automatically:
+
+1. **Tests** the backend with a real Postgres + Redis service container
+2. **Builds** the Spring Boot JAR and packages it into a Docker image
+3. **Builds** the React frontend into an Nginx Docker image
+4. **Pushes** both images to Docker Hub
+5. **SSH deploys** to EC2 — pulls new images, restarts containers, verifies health
+
+The manual `fresh-deploy` workflow does a full clean start — stops all containers, prunes old images, and rebuilds from scratch. Useful after major infrastructure changes.
+
+```
+Push to main
+    ↓
+GitHub Actions
+    ├── mvn test (Postgres + Redis service containers)
+    ├── docker build backend  →  Docker Hub
+    ├── docker build frontend →  Docker Hub
+    └── SSH → EC2
+            ├── docker compose pull
+            ├── up postgres + redis
+            ├── up backend (wait for /actuator/health)
+            └── up frontend + nginx
+```
+
+---
+
+## 👥 Roles
+
+| Role | Permissions |
 |---|---|
-| Auth | `POST /api/v1/auth/register` · `login` · `refresh` · `logout` |
-| Users | `GET /api/v1/users/me` · `PUT /api/v1/users/me` |
-| Tenants | `GET /api/v1/tenants/me` · `PUT /api/v1/tenants/me` |
-| Documents | `POST /api/v1/documents` · `GET` · `DELETE` · `GET /{id}/download` |
-| Workflow | `POST /api/v1/documents/{id}/submit` · `approve` · `reject` · `GET /{id}/history` |
-
-Full schema available via Swagger UI when running locally.
+| `EMPLOYEE` | Upload documents, submit for review, view own documents |
+| `MANAGER` | Approve or reject pending documents, view all tenant documents |
+| `ADMIN` | Everything above + invite users, change roles, delete users & documents |
 
 ---
 
-## Deployment
+## 📄 License
 
-Production runs on EC2 behind Nginx using `docker-compose.prod.yml`.  
-Every push to `main` triggers the GitHub Actions pipeline:
-
-```
-Test → Docker build & push → SSH deploy to EC2
-```
-
-See `.env.prod.example` for all required environment variables.
-
----
-
-## Project Structure
-
-```
-src/main/java/com/demoapplication/saas/
-├── auth/          # Registration, login, JWT, OAuth2 handlers
-├── user/          # User entity, profile management
-├── tenant/        # Tenant entity, tenant context holder
-├── document/      # Document entity, S3 integration, workflow
-├── security/      # JWT filter, user principals, OAuth2 service
-├── config/        # Security, CORS, S3, Redis, Swagger config
-└── common/        # ApiResponse wrapper, GlobalExceptionHandler
-```
+MIT — see [LICENSE](LICENSE) for details.
