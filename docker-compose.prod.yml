@@ -60,8 +60,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       # S3 credentials come from the EC2 IAM role automatically — no keys needed here.
-      AWS_REGION: ${AWS_REGION:ap-south-1}
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      AWS_REGION: ${AWS_REGION:-ap-south-1}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-amzn-saas3}
     depends_on:
       postgres:
         condition: service_healthy
