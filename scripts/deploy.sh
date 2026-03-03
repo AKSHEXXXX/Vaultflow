@@ -58,23 +58,18 @@ echo "--- Pulling ${DOCKER_IMAGE}:${IMAGE_TAG} ---"
 DOCKER_IMAGE="${DOCKER_IMAGE}" IMAGE_TAG="${IMAGE_TAG}" \
   sudo docker compose -f "${COMPOSE_FILE}" --env-file .env.prod pull backend
 
-echo "--- Starting postgres, redis, and minio (if not running) ---"
+echo "--- Starting postgres and redis (if not running) ---"
 DOCKER_IMAGE="${DOCKER_IMAGE}" IMAGE_TAG="${IMAGE_TAG}" \
-  sudo docker compose -f "${COMPOSE_FILE}" --env-file .env.prod up -d postgres redis minio
+  sudo docker compose -f "${COMPOSE_FILE}" --env-file .env.prod up -d postgres redis
 
-echo "--- Waiting for postgres, redis, and minio to be healthy (up to 90s) ---"
+echo "--- Waiting for postgres and redis to be healthy (up to 90s) ---"
 for i in $(seq 1 30); do
   PG_STATUS=$(sudo docker inspect --format='{{.State.Health.Status}}' saas-postgres-prod 2>/dev/null || echo "starting")
   RD_STATUS=$(sudo docker inspect --format='{{.State.Health.Status}}' saas-redis-prod 2>/dev/null || echo "starting")
-  MN_STATUS=$(sudo docker inspect --format='{{.State.Health.Status}}' saas-minio-prod 2>/dev/null || echo "starting")
-  echo "  [${i}/30] postgres: ${PG_STATUS}  redis: ${RD_STATUS}  minio: ${MN_STATUS}"
-  [ "${PG_STATUS}" = "healthy" ] && [ "${RD_STATUS}" = "healthy" ] && [ "${MN_STATUS}" = "healthy" ] && break
+  echo "  [${i}/30] postgres: ${PG_STATUS}  redis: ${RD_STATUS}"
+  [ "${PG_STATUS}" = "healthy" ] && [ "${RD_STATUS}" = "healthy" ] && break
   sleep 3
 done
-
-echo "--- Ensuring MinIO bucket exists ---"
-DOCKER_IMAGE="${DOCKER_IMAGE}" IMAGE_TAG="${IMAGE_TAG}" \
-  sudo docker compose -f "${COMPOSE_FILE}" --env-file .env.prod up minio-init --no-deps || true
 
 echo "--- Restarting backend ---"
 DOCKER_IMAGE="${DOCKER_IMAGE}" IMAGE_TAG="${IMAGE_TAG}" \
