@@ -82,7 +82,8 @@ Every transition is timestamped and stored in an immutable audit trail.
 | Technology | Purpose |
 |---|---|
 | **Docker** + **Docker Compose** | Container orchestration (dev & prod) |
-| **Nginx** | Reverse proxy, gzip compression, security headers |
+| **Nginx** | Reverse proxy, gzip compression, security headers, SSL termination |
+| **Let's Encrypt** | Automatic TLS certificates via Certbot (auto-renews before expiry) |
 | **AWS EC2** | Production hosting |
 | **GitHub Actions** | CI/CD pipeline (test → build → push → deploy) |
 | **Docker Hub** | Container image registry |
@@ -212,6 +213,15 @@ Every push to `main` automatically:
 5. **SSH deploys** to EC2 — pulls new images, restarts containers, verifies health
 
 The manual `fresh-deploy` workflow does a full clean start — stops all containers, prunes old images, and rebuilds from scratch. Useful after major infrastructure changes.
+
+### 🔒 SSL / TLS
+
+HTTPS is handled automatically by the deploy script:
+
+- On first deploy, **Certbot** stops Nginx, runs a standalone ACME challenge on port 80, and obtains a certificate from **Let's Encrypt**
+- The certificate and private key are written to `~/app/nginx/certs/` and mounted into the Nginx container
+- On every subsequent deploy the script checks the cert expiry — if it expires within 30 days it auto-renews before restarting Nginx
+- All HTTP traffic is redirected to HTTPS by Nginx
 
 ```
 Push to main
