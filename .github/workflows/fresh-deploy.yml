@@ -235,6 +235,16 @@ jobs:
             fi
           done
 
+          # Force-stop ALL Docker containers to free ports
+          echo "=== Force-stopping any remaining containers ==="
+          sudo docker stop $(sudo docker ps -aq) 2>/dev/null || true
+          sudo docker rm $(sudo docker ps -aq) 2>/dev/null || true
+
+          # Kill anything still holding port 80 or 443
+          echo "=== Freeing ports 80 and 443 ==="
+          sudo fuser -k 80/tcp 2>/dev/null || true
+          sudo fuser -k 443/tcp 2>/dev/null || true
+
           # ── 2. REMOVE old MinIO images ─────────────────────────────────────
           echo "=== Removing old MinIO images ==="
           sudo docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep -i minio | awk '{print $2}' | xargs -r sudo docker rmi -f 2>/dev/null || true
