@@ -43,9 +43,13 @@ frontend/.env.local
 
 # ----- Environment & Secrets (NEVER commit these) -----
 .env
+.env.dev
 .env.prod
 .env.local
 .env.*.local
+
+# ----- Local dev overrides (may contain secrets) -----
+backend/src/main/resources/application-local.yml
 
 # ----- SSL Certificates -----
 nginx/certs/
