@@ -46,6 +46,45 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── MinIO (self-hosted S3-compatible object storage) ──────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: saas-minio-prod
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-minioAdmin}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-minioSecret123}
+    volumes:
+      - minio_data:/data
+    networks:
+      - saas-internal
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── MinIO bucket initialiser (runs once, creates the bucket) ───────────────
+  minio-init:
+    image: minio/mc:latest
+    container_name: saas-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ACCESS_KEY: ${AWS_ACCESS_KEY_ID:-minioAdmin}
+      MINIO_SECRET_KEY: ${AWS_SECRET_ACCESS_KEY:-minioSecret123}
+      BUCKET_NAME: ${AWS_S3_BUCKET:-saas-documents}
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 $$MINIO_ACCESS_KEY $$MINIO_SECRET_KEY &&
+      /usr/bin/mc mb --ignore-existing myminio/$$BUCKET_NAME &&
+      echo 'Bucket ready: '$$BUCKET_NAME"
+    networks:
+      - saas-internal
+    restart: on-failure
+
   # ── Spring Boot Backend ─────────────────────────────────────────────────────
   backend:
     image: ${DOCKER_IMAGE}:${IMAGE_TAG:-latest}
@@ -55,14 +94,22 @@ services:
       - .env.prod
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      # Override DB/Redis hosts to point at containers on the internal network
+      # Override DB/Redis/S3 hosts to point at containers on the internal network
       DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      # Point S3 client at MinIO instead of real AWS
+      AWS_S3_ENDPOINT: http://minio:9000
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-saas-documents}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-minioAdmin}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-minioSecret123}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     ports:
       - "8080:8080"    # Direct access (nginx is optional via --profile proxy)
@@ -112,6 +159,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
   nginx_logs:
 
 networks:
