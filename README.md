@@ -239,6 +239,15 @@ GitHub Actions
 
 ---
 
+
+
+https://github.com/user-attachments/assets/10acfc47-0c14-402d-b064-44135775d3a3
+
+
+---
+
+
+
 ## 👥 Roles
 
 | Role | Permissions |
