@@ -60,7 +60,7 @@ public class WorkflowService {
                             + ". Document must be in DRAFT status.");
         }
 
-        document.setStatus(DocumentStatus.SUBMITTED);
+        document.setStatus(DocumentStatus.PENDING);
         Document saved = documentRepository.save(document);
 
         recordHistory(saved, WorkflowAction.SUBMITTED, userId, tenantId);
@@ -78,10 +78,10 @@ public class WorkflowService {
 
         Document document = loadDocumentInTenant(documentId, tenantId);
 
-        if (document.getStatus() != DocumentStatus.SUBMITTED) {
+        if (document.getStatus() != DocumentStatus.PENDING) {
             throw new IllegalStateException(
                     "Cannot approve a document in status: " + document.getStatus()
-                            + ". Document must be in SUBMITTED status.");
+                            + ". Document must be in PENDING status.");
         }
 
         document.setStatus(DocumentStatus.APPROVED);
@@ -102,10 +102,10 @@ public class WorkflowService {
 
         Document document = loadDocumentInTenant(documentId, tenantId);
 
-        if (document.getStatus() != DocumentStatus.SUBMITTED) {
+        if (document.getStatus() != DocumentStatus.PENDING) {
             throw new IllegalStateException(
                     "Cannot reject a document in status: " + document.getStatus()
-                            + ". Document must be in SUBMITTED status.");
+                            + ". Document must be in PENDING status.");
         }
 
         document.setStatus(DocumentStatus.REJECTED);

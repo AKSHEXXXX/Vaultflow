@@ -2,7 +2,7 @@ package com.demoapplication.saas.document.entity;
 
 public enum DocumentStatus {
     DRAFT,
-    SUBMITTED,
+    PENDING,
     APPROVED,
     REJECTED
 }
