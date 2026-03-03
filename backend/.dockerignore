@@ -1,4 +1,6 @@
-target/
+# target/ is intentionally NOT excluded here.
+# Dockerfile (local) re-runs Maven inside Docker so target/ is irrelevant.
+# Dockerfile.ci (CI/CD) copies a pre-built JAR from target/ — it must be visible.
 .git/
 .github/
 .vscode/
