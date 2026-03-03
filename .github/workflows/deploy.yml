@@ -189,6 +189,7 @@ jobs:
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [changes, build, build-frontend]
     if: |
       always() &&
@@ -212,8 +213,13 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          echo "StrictHostKeyChecking no" >> ~/.ssh/config
-          echo "UserKnownHostsFile /dev/null" >> ~/.ssh/config
+          cat >> ~/.ssh/config <<'EOF'
+          StrictHostKeyChecking no
+          UserKnownHostsFile /dev/null
+          ConnectTimeout 15
+          ServerAliveInterval 30
+          ServerAliveCountMax 3
+          EOF
 
       - name: Deploy
         env:
